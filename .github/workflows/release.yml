@@ -1,0 +1,47 @@
+name: Release
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pull-requests: write
+    issues: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        outputs:
+            released: ${{ steps.release.outputs.release_created }}
+            tag: ${{ steps.release.outputs.tag_name }}
+        steps:
+            - uses: googleapis/release-please-action@v4
+              id: release
+              with:
+                  config-file: release-please-config.json
+                  manifest-file: .release-please-manifest.json
+
+    publish:
+        if: needs.release.outputs.released == 'true'
+        needs: release
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  ref: ${{ needs.release.outputs.tag }}
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: npm
+                  registry-url: https://registry.npmjs.org
+            - run: npm install --global npm@latest
+            - run: npm ci
+            - run: npm run verify
+            - name: Verify tag and package version
+              run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
+            - run: npm publish --access public

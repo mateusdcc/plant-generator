@@ -1,0 +1,18 @@
+name: Bug report
+description: Report reproducible incorrect behavior
+title: "[Bug]: "
+labels: [bug]
+body:
+    - type: input
+      id: version
+      attributes: { label: Package version }
+      validations: { required: true }
+    - type: textarea
+      id: reproduction
+      attributes:
+          { label: Minimal reproduction, description: Include model, seed, time, parameters, limits, and diagnostics. }
+      validations: { required: true }
+    - type: textarea
+      id: expected
+      attributes: { label: Expected and actual behavior }
+      validations: { required: true }

@@ -1,0 +1,11 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule: { interval: weekly }
+      groups:
+          development-tooling:
+              patterns: ["eslint*", "@typescript-eslint/*", "prettier", "typedoc", "vitest"]
+    - package-ecosystem: github-actions
+      directory: /
+      schedule: { interval: weekly }
