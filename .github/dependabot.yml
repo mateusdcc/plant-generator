@@ -3,6 +3,9 @@ updates:
     - package-ecosystem: npm
       directory: /
       schedule: { interval: weekly }
+      ignore:
+          # roblox-ts 3.0 compiles against its exact TypeScript 5.5 toolchain.
+          - dependency-name: typescript
       groups:
           development-tooling:
               patterns: ["eslint*", "@typescript-eslint/*", "prettier", "typedoc", "vitest"]

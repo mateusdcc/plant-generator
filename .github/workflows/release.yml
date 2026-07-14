@@ -17,7 +17,7 @@ jobs:
             released: ${{ steps.release.outputs.release_created }}
             tag: ${{ steps.release.outputs.tag_name }}
         steps:
-            - uses: googleapis/release-please-action@v4
+            - uses: googleapis/release-please-action@v5
               id: release
               with:
                   config-file: release-please-config.json
@@ -34,7 +34,7 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.release.outputs.tag }}
-            - uses: actions/setup-node@v6
+            - uses: actions/setup-node@v7
               with:
                   node-version: 24
                   cache: npm
