@@ -1,0 +1,13 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": "..",
+		"paths": { "@rbxts/plant-generator": ["src/index.ts"] },
+		"rootDir": "..",
+		"noEmit": true,
+		"incremental": false,
+		"skipLibCheck": true,
+		"tsBuildInfoFile": null
+	},
+	"include": ["../src/**/*.ts", "**/*.ts"]
+}

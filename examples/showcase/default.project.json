@@ -1,0 +1,15 @@
+{
+	"name": "PlantGeneratorShowcase",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"rbxts_include": { "$path": "../../include" },
+			"node_modules": { "$path": "../../node_modules/@rbxts" }
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"PlantShowcase": { "$path": "out" }
+		}
+	}
+}
