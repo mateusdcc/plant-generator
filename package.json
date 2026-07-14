@@ -1,0 +1,73 @@
+{
+	"name": "@rbxts/plant-generator",
+	"version": "0.1.0",
+	"description": "Deterministic, renderer-independent procedural botany for roblox-ts.",
+	"main": "out/init.luau",
+	"types": "out/index.d.ts",
+	"typings": "out/index.d.ts",
+	"files": [
+		"out",
+		"README.md",
+		"LICENSE",
+		"NOTICE.md",
+		"!**/*.tsbuildinfo"
+	],
+	"scripts": {
+		"build": "rbxtsc",
+		"build:clean": "rm -rf out && rbxtsc",
+		"watch": "rbxtsc -w",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "eslint src tests scripts vitest.config.ts",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"docs": "typedoc",
+		"docs:check": "typedoc --treatWarningsAsErrors",
+		"examples:check": "tsc -p examples/tsconfig.json",
+		"benchmark": "vitest bench --run benchmarks/generation.bench.ts",
+		"pack:inspect": "node scripts/inspect-pack.mjs",
+		"consumer:check": "node scripts/consumer-check.mjs",
+		"verify": "npm run format:check && npm run lint && npm run build:clean && npm test && npm run examples:check && npm run docs:check && npm run pack:inspect",
+		"prepack": "npm run build:clean"
+	},
+	"keywords": [
+		"roblox",
+		"roblox-ts",
+		"procedural-generation",
+		"l-system",
+		"botany",
+		"plants",
+		"fractals"
+	],
+	"author": "Mateus Cavalcanti",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mateusdcc/plant-generator.git"
+	},
+	"bugs": {
+		"url": "https://github.com/mateusdcc/plant-generator/issues"
+	},
+	"homepage": "https://mateusdcc.github.io/plant-generator/",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"engines": {
+		"node": ">=20.19"
+	},
+	"devDependencies": {
+		"@rbxts/compiler-types": "3.0.0-types.0",
+		"@rbxts/types": "1.0.938",
+		"@typescript-eslint/eslint-plugin": "8.64.0",
+		"@typescript-eslint/parser": "8.64.0",
+		"eslint": "10.7.0",
+		"eslint-config-prettier": "10.1.8",
+		"eslint-plugin-roblox-ts": "1.4.0",
+		"prettier": "3.9.5",
+		"roblox-ts": "3.0.0",
+		"typedoc": "0.28.20",
+		"typescript": "5.5.3",
+		"vitest": "4.1.10"
+	}
+}

@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"declaration": true,
+		"downlevelIteration": true,
+		"exactOptionalPropertyTypes": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"incremental": true,
+		"jsx": "react",
+		"jsxFactory": "React.createElement",
+		"jsxFragmentFactory": "React.Fragment",
+		"module": "commonjs",
+		"moduleDetection": "force",
+		"moduleResolution": "Node",
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noLib": true,
+		"noUncheckedIndexedAccess": true,
+		"outDir": "out",
+		"resolveJsonModule": true,
+		"rootDir": "src",
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ESNext",
+		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
+		"typeRoots": ["node_modules/@rbxts"]
+	},
+	"include": ["src/**/*.ts"]
+}

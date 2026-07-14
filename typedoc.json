@@ -1,0 +1,24 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": ["src/index.ts"],
+	"out": "docs-site",
+	"name": "@rbxts/plant-generator",
+	"includeVersion": true,
+	"readme": "README.md",
+	"projectDocuments": ["docs/*.md"],
+	"navigationLinks": {
+		"GitHub": "https://github.com/mateusdcc/plant-generator",
+		"npm": "https://www.npmjs.com/package/@rbxts/plant-generator"
+	},
+	"categorizeByGroup": true,
+	"searchInDocuments": true,
+	"highlightLanguages": ["typescript", "json", "bash", "mermaid"],
+	"sourceLinkExternal": true,
+	"githubPages": true,
+	"requiredToBeDocumented": ["Enum", "Variable", "Function", "Class", "Interface", "TypeAlias"],
+	"validation": {
+		"notExported": true,
+		"invalidLink": true,
+		"notDocumented": true
+	}
+}
