@@ -5,7 +5,17 @@
 			"package-name": "@rbxts/plant-generator",
 			"initial-version": "0.1.0",
 			"include-v-in-tag": true,
-			"changelog-path": "CHANGELOG.md"
+			"changelog-path": "CHANGELOG.md",
+			"changelog-sections": [
+				{ "type": "feat", "section": "Features" },
+				{ "type": "fix", "section": "Bug Fixes" },
+				{ "type": "perf", "section": "Performance" },
+				{ "type": "refactor", "section": "Refactoring" },
+				{ "type": "test", "section": "Verification" },
+				{ "type": "docs", "section": "Documentation and examples" },
+				{ "type": "build", "section": "Build system" },
+				{ "type": "ci", "section": "Automation" }
+			]
 		}
 	}
 }
