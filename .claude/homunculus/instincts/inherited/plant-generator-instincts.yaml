@@ -11,19 +11,17 @@ confidence: 0.6
 domain: git
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Commit Length
 
-# Plant Generator Commit Length
+    ## Action
 
-## Action
+    Keep commit messages concise (~40 characters)
 
-Keep commit messages concise (~40 characters)
+    ## Evidence
 
-## Evidence
-
-- Average commit message length: 40 chars
-- Based on 1 commits
-
+    - Average commit message length: 40 chars
+    - Based on 1 commits
 ---
 id: plant-generator-naming-files
 trigger: "when creating a new file"
@@ -31,19 +29,17 @@ confidence: 0.8
 domain: code-style
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Naming Files
 
-# Plant Generator Naming Files
+    ## Action
 
-## Action
+    Use camelCase naming convention
 
-Use camelCase naming convention
+    ## Evidence
 
-## Evidence
-
-- Analyzed file naming patterns in repository
-- Dominant pattern: camelCase
-
+    - Analyzed file naming patterns in repository
+    - Dominant pattern: camelCase
 ---
 id: plant-generator-import-relative
 trigger: "when importing modules"
@@ -51,19 +47,17 @@ confidence: 0.75
 domain: code-style
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Import Relative
 
-# Plant Generator Import Relative
+    ## Action
 
-## Action
+    Use relative imports for project files
 
-Use relative imports for project files
+    ## Evidence
 
-## Evidence
-
-- Import analysis shows relative import pattern
-- Example: import { x } from '../lib/x'
-
+    - Import analysis shows relative import pattern
+    - Example: import { x } from '../lib/x'
 ---
 id: plant-generator-export-style
 trigger: "when exporting from a module"
@@ -71,19 +65,17 @@ confidence: 0.7
 domain: code-style
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Export Style
 
-# Plant Generator Export Style
+    ## Action
 
-## Action
+    Prefer named exports
 
-Prefer named exports
+    ## Evidence
 
-## Evidence
-
-- Export pattern analysis
-- Dominant style: named
-
+    - Export pattern analysis
+    - Dominant style: named
 ---
 id: plant-generator-test-separate
 trigger: "when writing tests"
@@ -91,19 +83,17 @@ confidence: 0.8
 domain: testing
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Test Separate
 
-# Plant Generator Test Separate
+    ## Action
 
-## Action
+    Place tests in the tests/ or __tests__/ directory, mirroring src structure
 
-Place tests in the tests/ or __tests__/ directory, mirroring src structure
+    ## Evidence
 
-## Evidence
-
-- Separate test directory pattern detected
-- Tests live in dedicated test folders
-
+    - Separate test directory pattern detected
+    - Tests live in dedicated test folders
 ---
 id: plant-generator-test-framework
 trigger: "when writing tests"
@@ -111,19 +101,17 @@ confidence: 0.9
 domain: testing
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Test Framework
 
-# Plant Generator Test Framework
+    ## Action
 
-## Action
+    Use vitest as the test framework
 
-Use vitest as the test framework
+    ## Evidence
 
-## Evidence
-
-- Test framework detected: vitest
-- File pattern: *.test.ts
-
+    - Test framework detected: vitest
+    - File pattern: *.test.ts
 ---
 id: plant-generator-test-naming
 trigger: "when creating a test file"
@@ -131,19 +119,17 @@ confidence: 0.85
 domain: testing
 source: repo-analysis
 source_repo: https://github.com/mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Test Naming
 
-# Plant Generator Test Naming
+    ## Action
 
-## Action
+    Name test files using the pattern: *.test.ts
 
-Name test files using the pattern: *.test.ts
+    ## Evidence
 
-## Evidence
-
-- File pattern: *.test.ts
-- Consistent across test files
-
+    - File pattern: *.test.ts
+    - Consistent across test files
 ---
 id: plant-generator-instinct-file-naming
 trigger: "When creating a new source file"
@@ -151,18 +137,16 @@ confidence: 0.9
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct File Naming
 
-# Plant Generator Instinct File Naming
+    ## Action
 
-## Action
+    Name the file using camelCase
 
-Name the file using camelCase
+    ## Evidence
 
-## Evidence
-
-- Pattern in srcLayout and namingConventions.files
-
+    - Pattern in srcLayout and namingConventions.files
 ---
 id: plant-generator-instinct-function-naming
 trigger: "When defining a new function"
@@ -170,18 +154,16 @@ confidence: 0.9
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Function Naming
 
-# Plant Generator Instinct Function Naming
+    ## Action
 
-## Action
+    Name the function using camelCase
 
-Name the function using camelCase
+    ## Evidence
 
-## Evidence
-
-- Pattern in namingConventions.functions
-
+    - Pattern in namingConventions.functions
 ---
 id: plant-generator-instinct-class-naming
 trigger: "When defining a new class"
@@ -189,18 +171,16 @@ confidence: 0.9
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Class Naming
 
-# Plant Generator Instinct Class Naming
+    ## Action
 
-## Action
+    Name the class using PascalCase
 
-Name the class using PascalCase
+    ## Evidence
 
-## Evidence
-
-- Pattern in namingConventions.classes
-
+    - Pattern in namingConventions.classes
 ---
 id: plant-generator-instinct-constant-naming
 trigger: "When defining a new constant"
@@ -208,18 +188,16 @@ confidence: 0.9
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Constant Naming
 
-# Plant Generator Instinct Constant Naming
+    ## Action
 
-## Action
+    Name the constant using SCREAMING_SNAKE_CASE
 
-Name the constant using SCREAMING_SNAKE_CASE
+    ## Evidence
 
-## Evidence
-
-- Pattern in namingConventions.constants
-
+    - Pattern in namingConventions.constants
 ---
 id: plant-generator-instinct-import-style
 trigger: "When importing modules"
@@ -227,18 +205,16 @@ confidence: 0.8
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Import Style
 
-# Plant Generator Instinct Import Style
+    ## Action
 
-## Action
+    Use relative import paths
 
-Use relative import paths
+    ## Evidence
 
-## Evidence
-
-- Pattern in importStyle
-
+    - Pattern in importStyle
 ---
 id: plant-generator-instinct-export-style
 trigger: "When exporting functions or classes"
@@ -246,18 +222,16 @@ confidence: 0.8
 domain: code-style
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Export Style
 
-# Plant Generator Instinct Export Style
+    ## Action
 
-## Action
+    Use named exports
 
-Use named exports
+    ## Evidence
 
-## Evidence
-
-- Pattern in exportStyle
-
+    - Pattern in exportStyle
 ---
 id: plant-generator-instinct-test-file-naming
 trigger: "When creating a test file"
@@ -265,18 +239,16 @@ confidence: 0.9
 domain: testing
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Test File Naming
 
-# Plant Generator Instinct Test File Naming
+    ## Action
 
-## Action
+    Name the file with a .test.ts suffix
 
-Name the file with a .test.ts suffix
+    ## Evidence
 
-## Evidence
-
-- Pattern in testing.filePattern
-
+    - Pattern in testing.filePattern
 ---
 id: plant-generator-instinct-testing-framework
 trigger: "When writing or running tests"
@@ -284,18 +256,16 @@ confidence: 0.9
 domain: testing
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Testing Framework
 
-# Plant Generator Instinct Testing Framework
+    ## Action
 
-## Action
+    Use the vitest framework
 
-Use the vitest framework
+    ## Evidence
 
-## Evidence
-
-- Pattern in testing.framework
-
+    - Pattern in testing.framework
 ---
 id: plant-generator-instinct-test-type
 trigger: "When writing tests"
@@ -303,18 +273,16 @@ confidence: 0.8
 domain: testing
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Test Type
 
-# Plant Generator Instinct Test Type
+    ## Action
 
-## Action
+    Write unit tests
 
-Write unit tests
+    ## Evidence
 
-## Evidence
-
-- Pattern in testing.testTypes
-
+    - Pattern in testing.testTypes
 ---
 id: plant-generator-instinct-test-location
 trigger: "When adding or updating tests"
@@ -322,18 +290,16 @@ confidence: 0.8
 domain: testing
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Test Location
 
-# Plant Generator Instinct Test Location
+    ## Action
 
-## Action
+    Place test files in the separate tests folder
 
-Place test files in the separate tests folder
+    ## Evidence
 
-## Evidence
-
-- Pattern in architecture.folderStructure.testLocation
-
+    - Pattern in architecture.folderStructure.testLocation
 ---
 id: plant-generator-instinct-git-commit-style
 trigger: "When writing a commit message"
@@ -341,16 +307,14 @@ confidence: 0.7
 domain: git
 source: repo-analysis
 source_repo: mateusdcc/plant-generator
----
+content: |-
+    # Plant Generator Instinct Git Commit Style
 
-# Plant Generator Instinct Git Commit Style
+    ## Action
 
-## Action
+    Use a freeform message without a required prefix
 
-Use a freeform message without a required prefix
+    ## Evidence
 
-## Evidence
-
-- Pattern in commits.prefixes (empty)
-- Example: 'Release polished botanical growth v0.1.2'
-
+    - Pattern in commits.prefixes (empty)
+    - Example: 'Release polished botanical growth v0.1.2'
