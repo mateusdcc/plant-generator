@@ -1,2 +1,7 @@
 # Generated and updated by release-please.
 CHANGELOG.md
+
+# Generated ECC agent/runtime configuration is managed externally.
+.agents/
+.codex/
+.claude/skills/plant-generator/SKILL.md
