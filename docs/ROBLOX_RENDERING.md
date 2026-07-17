@@ -4,9 +4,15 @@ Only `src/roblox` creates Instances. `PartPlantRenderer` requires an explicit
 parent, uses pooled anchored cylinders, batches work, approximates taper with the
 mean endpoint diameter, and returns a handle for growth, time, LOD, transforms,
 materials, statistics, cancellation, and destruction. Generated organ sockets
-become lightweight pooled leaf blocks or flower spheres. Supply a
+become lightweight pooled flattened leaf ellipsoids or flower spheres with matte
+botanical material defaults. Supply a
 `PartOrganFactory` to create specialized Parts; returning `undefined` selects the
 pooled default for that organ.
+
+`updateTransform` addresses the model's explicit botanical-root pivot, so a
+translation places the plant base rather than its changing bounding-box center.
+Medium/full LOD organs are retained only when their host segment is also part of
+that LOD selection; this prevents detached foliage on pruned branches.
 
 EditableMesh conversion is behind `EditableMeshCapability`. Current Roblox APIs
 use `AssetService:CreateEditableMesh()`, stable vertex IDs, `AddTriangle`,

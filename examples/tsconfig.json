@@ -2,7 +2,7 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"baseUrl": "..",
-		"paths": { "@rbxts/plant-generator": ["src/index.ts"] },
+		"paths": { "@rbxts/a-plant-generator": ["src/index.ts"] },
 		"rootDir": "..",
 		"noEmit": true,
 		"incremental": false,

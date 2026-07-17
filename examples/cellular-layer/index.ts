@@ -1,4 +1,4 @@
-import { cellMapToMesh, createPlanarCellLayer, createSphericalCellLayer, divideCells } from "@rbxts/plant-generator";
+import { cellMapToMesh, createPlanarCellLayer, createSphericalCellLayer, divideCells } from "@rbxts/a-plant-generator";
 
 const planar = divideCells(createPlanarCellLayer(4, 4), (face) => face.id % 2 === 0);
 export const planarMesh = cellMapToMesh(planar);

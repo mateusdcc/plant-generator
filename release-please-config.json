@@ -2,7 +2,7 @@
 	"packages": {
 		".": {
 			"release-type": "node",
-			"package-name": "@rbxts/plant-generator",
+			"package-name": "@rbxts/a-plant-generator",
 			"initial-version": "0.1.0",
 			"include-v-in-tag": true,
 			"changelog-path": "CHANGELOG.md",

@@ -1,4 +1,4 @@
-import { PLANT_PRESETS, PlantCompiler, PlantGenerator, PlantSerializer } from "@rbxts/plant-generator";
+import { PLANT_PRESETS, PlantCompiler, PlantGenerator, PlantSerializer } from "@rbxts/a-plant-generator";
 
 const model = PlantCompiler.compile(PLANT_PRESETS.bush!);
 const serverResult = PlantGenerator.generate(model, { seed: 88, iterations: 4, time: 0.7 });

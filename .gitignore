@@ -4,5 +4,6 @@
 /coverage
 /docs-site
 /tmp
+/studio-examples
 *.tgz
 *.tsbuildinfo

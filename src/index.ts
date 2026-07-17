@@ -5,6 +5,7 @@
  */
 
 export * from "./animation/growth";
+export * from "./animation/structural-growth";
 export * from "./animation/timeline";
 export * from "./botanical/buds";
 export * from "./botanical/inflorescences";

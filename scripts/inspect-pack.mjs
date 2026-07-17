@@ -10,6 +10,10 @@ try {
 		"package/out/init.luau",
 		"package/out/index.d.ts",
 		"package/README.md",
+		"package/docs/assets/examples/preset-gallery.jpg",
+		"package/docs/assets/examples/phyllotaxis-forms.jpg",
+		"package/docs/assets/examples/growth-stages.jpg",
+		"package/docs/assets/examples/inflorescence-gallery.jpg",
 		"package/LICENSE",
 		"package/NOTICE.md",
 	];

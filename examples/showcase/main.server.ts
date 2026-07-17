@@ -5,7 +5,7 @@ import {
 	PLANT_PRESETS,
 	type LodLevel,
 	type PlantRenderHandle,
-} from "@rbxts/plant-generator";
+} from "@rbxts/a-plant-generator";
 
 const workspace = game.GetService("Workspace");
 const controls = new Instance("Folder");

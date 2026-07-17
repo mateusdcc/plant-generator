@@ -1,4 +1,4 @@
-import { GOLDEN_ANGLE, placePlanarPhyllotaxis } from "@rbxts/plant-generator";
+import { GOLDEN_ANGLE, placePlanarPhyllotaxis } from "@rbxts/a-plant-generator";
 
 export const seeds = placePlanarPhyllotaxis({
 	count: 500,

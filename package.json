@@ -1,12 +1,13 @@
 {
-	"name": "@rbxts/plant-generator",
-	"version": "0.1.0",
+	"name": "@rbxts/a-plant-generator",
+	"version": "0.1.2",
 	"description": "Deterministic, renderer-independent procedural botany for roblox-ts.",
 	"main": "out/init.luau",
 	"types": "out/index.d.ts",
 	"typings": "out/index.d.ts",
 	"files": [
 		"out",
+		"docs/assets/examples",
 		"README.md",
 		"LICENSE",
 		"NOTICE.md",
@@ -50,8 +51,7 @@
 	},
 	"homepage": "https://mateusdcc.github.io/plant-generator/",
 	"publishConfig": {
-		"access": "public",
-		"provenance": true
+		"access": "public"
 	},
 	"engines": {
 		"node": ">=20.19"
