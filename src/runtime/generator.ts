@@ -12,7 +12,7 @@ import {
 } from "../topology/branch-graph";
 import { interpret3D } from "../turtle/interpreter";
 import type { GenerationCache } from "./cache";
-import { CancellationSource, type CancellationToken, type GenerationLimits } from "./limits";
+import { CancellationSource, DEFAULT_LIMITS, type CancellationToken, type GenerationLimits } from "./limits";
 import type { PlantDescriptor } from "./serialization";
 import {
 	compileModelSpecification,
@@ -104,27 +104,74 @@ export class PlantCompiler {
 	}
 }
 
+function limitsCacheKey(overrides: Partial<GenerationLimits> | undefined): string {
+	return [
+		overrides?.maxIterations ?? DEFAULT_LIMITS.maxIterations,
+		overrides?.maxSymbols ?? DEFAULT_LIMITS.maxSymbols,
+		overrides?.maxBranchDepth ?? DEFAULT_LIMITS.maxBranchDepth,
+		overrides?.maxStackDepth ?? DEFAULT_LIMITS.maxStackDepth,
+		overrides?.maxSegments ?? DEFAULT_LIMITS.maxSegments,
+		overrides?.maxOrgans ?? DEFAULT_LIMITS.maxOrgans,
+		overrides?.maxVertices ?? DEFAULT_LIMITS.maxVertices,
+		overrides?.maxTriangles ?? DEFAULT_LIMITS.maxTriangles,
+		overrides?.maxWorkUnits ?? DEFAULT_LIMITS.maxWorkUnits,
+		overrides?.maxRenderedInstances ?? DEFAULT_LIMITS.maxRenderedInstances,
+	].join(",");
+}
+
 function cacheKey(model: CompiledPlantModel, options: PlantGenerationOptions): string {
-	return `${model.hash}:${options.seed}:${options.iterations}:${options.time ?? 0}:${hashSymbolParameters(options.parameters ?? {})}:${hashSymbolParameters(options.mutations ?? {})}`;
+	return `${model.hash}:runtime=${model.runtimeCacheIdentity ?? 0}:seed=${options.seed}:iterations=${options.iterations}:time=${options.time ?? 0}:parameters=${hashSymbolParameters(options.parameters ?? {})}:mutations=${hashSymbolParameters(options.mutations ?? {})}:limits=${limitsCacheKey(options.limits)}`;
+}
+
+function selectsDensitySlot(index: number, density: number | undefined): boolean {
+	const value = math.clamp(density ?? 1, 0, 1);
+	if (value <= 0) return false;
+	if (value >= 1) return true;
+	const interval = math.max(1, math.floor(1 / value + 0.5));
+	return index % interval === 0;
 }
 
 function createOrgans(
 	model: CompiledPlantModel,
 	graph: BranchGraph,
 	observer: PlantGenerationObserver | undefined,
+	maximumOrgans: number,
 ): readonly GeneratedOrgan[] {
 	const organs = new Array<GeneratedOrgan>();
+	const limit = math.max(0, math.floor(maximumOrgans));
+	const occupiedTerminalSegments: Record<number, boolean> = {};
+	for (const attachment of graph.attachments) {
+		if (organs.size() >= limit) break;
+		const segmentId = attachment.segmentId ?? graph.nodes[attachment.nodeId]?.incomingSegmentId;
+		if (segmentId === undefined) continue;
+		const organ: GeneratedOrgan = {
+			id: organs.size(),
+			kind: attachment.kind,
+			segmentId,
+			transform: attachment.transform,
+			birthTime: attachment.birthTime,
+			metadata: attachment.metadata,
+		};
+		organs.push(organ);
+		occupiedTerminalSegments[segmentId] = true;
+		observer?.onOrganEmitted?.(organ);
+	}
 	const terminals = findTerminalSegments(graph);
 	for (let index = 0; index < terminals.size(); index++) {
+		if (organs.size() >= limit) break;
 		const segment = terminals[index];
 		if (segment === undefined) continue;
+		// An explicit socket at this terminal is authoritative for that tip, while
+		// unrelated terminal segments still receive the configured fallback organ.
+		if (occupiedTerminalSegments[segment.id] === true) continue;
 		const leafKind = model.specification.organs?.terminalLeafKind;
 		const flowerKind = model.specification.organs?.terminalFlowerKind;
 		const kind =
-			flowerKind !== undefined &&
-			index % math.max(1, math.floor(1 / math.max(model.specification.organs?.flowerDensity ?? 1, 1e-6))) === 0
+			flowerKind !== undefined && selectsDensitySlot(index, model.specification.organs?.flowerDensity)
 				? flowerKind
-				: leafKind;
+				: leafKind !== undefined && selectsDensitySlot(index, model.specification.organs?.leafDensity)
+					? leafKind
+					: undefined;
 		if (kind === undefined) continue;
 		const organ: GeneratedOrgan = {
 			id: organs.size(),
@@ -146,8 +193,14 @@ function assembleResult(
 	derivation: DerivationResult,
 	cacheHit: boolean,
 ): PlantGenerationResult {
+	const attachmentMappings = new Array<{ symbol: string; kind: string }>();
+	const terminalLeafKind = model.specification.organs?.terminalLeafKind;
+	const terminalFlowerKind = model.specification.organs?.terminalFlowerKind;
+	if (terminalLeafKind !== undefined) attachmentMappings.push({ symbol: "L", kind: terminalLeafKind });
+	if (terminalFlowerKind !== undefined) attachmentMappings.push({ symbol: "K", kind: terminalFlowerKind });
 	const turtle = interpret3D(derivation.word, {
 		...model.specification.turtle,
+		attachmentMappings,
 		...(options.limits === undefined ? {} : { limits: options.limits }),
 		sink: {
 			onSegment(segment): void {
@@ -157,7 +210,7 @@ function assembleResult(
 	});
 	options.observer?.onTopologyEvent?.("interpreted");
 	const graph = turtle.branchGraph;
-	const organs = createOrgans(model, graph, options.observer);
+	const organs = createOrgans(model, graph, options.observer, options.limits?.maxOrgans ?? DEFAULT_LIMITS.maxOrgans);
 	let mesh = emptyMesh();
 	if (model.specification.geometry?.enabled !== false) {
 		const factoryId = model.specification.geometry?.factoryId;
@@ -274,7 +327,10 @@ export class PlantGenerator {
 	/** Generates a deterministic plant synchronously, consulting an optional cache. */
 	public static generate(model: CompiledPlantModel, options: PlantGenerationOptions): PlantGenerationResult {
 		const key = cacheKey(model, options);
-		const cached = options.cache?.get(key);
+		// Cancellation is external mutable state and cannot be represented safely in
+		// a deterministic key. Never read or populate a shared cache for such calls.
+		const cache = options.cancellation === undefined ? options.cache : undefined;
+		const cached = cache?.get(key);
 		if (cached !== undefined) {
 			for (const diagnostic of cached.diagnostics) options.observer?.onDiagnosticEmitted?.(diagnostic);
 			return { ...cached, statistics: { ...cached.statistics, cacheHit: true } };
@@ -288,7 +344,7 @@ export class PlantGenerator {
 			...(options.observer === undefined ? {} : { observer: options.observer }),
 		});
 		const result = assembleResult(model, options, derivation, false);
-		options.cache?.set(key, result);
+		cache?.set(key, result);
 		return result;
 	}
 

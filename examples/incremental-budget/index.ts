@@ -1,4 +1,4 @@
-import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/plant-generator";
+import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/a-plant-generator";
 
 const model = PlantCompiler.compile(PLANT_PRESETS["timed-tree"]!);
 export const session = PlantGenerator.createSession(model, { seed: 91, iterations: 7 });

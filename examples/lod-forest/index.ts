@@ -1,4 +1,4 @@
-import { DistanceLodPolicy, PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/plant-generator";
+import { DistanceLodPolicy, PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/a-plant-generator";
 
 const result = PlantGenerator.generate(PlantCompiler.compile(PLANT_PRESETS.conifer!), { seed: 2, iterations: 4 });
 const policy = new DistanceLodPolicy(60, 140, 300);

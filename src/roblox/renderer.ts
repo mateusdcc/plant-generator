@@ -4,7 +4,7 @@ import type { LodLevel } from "./lod";
 
 /** Renderer handle owns every created resource and supports deterministic cleanup. @public */
 export interface PlantRenderHandle {
-	/** Applies normalized structural and organ growth. */
+	/** Applies raw normalized developmental time to structural and organ growth. */
 	setGrowth(growth: number): void;
 	/** Applies an absolute or renderer-defined timeline time. */
 	setTime(time: number): void;

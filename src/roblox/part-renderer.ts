@@ -1,4 +1,9 @@
-import { length3, sub3 } from "../math/vector";
+import {
+	createStructuralGrowthSchedule,
+	elongateSegment,
+	evaluateStructuralGrowthSpan,
+	type StructuralGrowthSchedule,
+} from "../animation/structural-growth";
 import type { GeneratedOrgan, PlantGenerationResult } from "../runtime/generator";
 import type { BranchSegment } from "../topology/branch-graph";
 import type { LodLevel } from "./lod";
@@ -36,6 +41,7 @@ class PartPoolPolicy implements InstancePoolPolicy<Part> {
 
 	public reset(instance: Part): void {
 		instance.Parent = undefined;
+		for (const child of instance.GetChildren()) child.Destroy();
 		instance.Transparency = 0;
 		instance.Shape = Enum.PartType.Cylinder;
 		instance.Size = new Vector3(1, 1, 1);
@@ -50,7 +56,7 @@ interface RenderedSegmentPart {
 	readonly kind: "segment";
 	readonly part: Part;
 	readonly segment: BranchSegment;
-	readonly baseLength: number;
+	localGrowth: number;
 }
 
 interface RenderedOrganPart {
@@ -59,6 +65,7 @@ interface RenderedOrganPart {
 	readonly organ: GeneratedOrgan;
 	readonly baseSize: Vector3;
 	readonly pooled: boolean;
+	localGrowth: number;
 }
 
 type RenderedPart = RenderedSegmentPart | RenderedOrganPart;
@@ -72,6 +79,8 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 	private destroyed = false;
 	private growth = 1;
 	private lod: LodLevel = "full";
+	private readonly growthSchedule: StructuralGrowthSchedule;
+	private rootTransform = CFrame.identity;
 
 	public constructor(
 		private readonly result: PlantGenerationResult,
@@ -80,7 +89,11 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 	) {
 		this.model = new Instance("Model");
 		this.model.Name = options.name ?? `Plant_${result.descriptor.seed}`;
+		// Pin the model pivot to the botanical origin before adding geometry. Without
+		// an explicit WorldPivot, Roblox derives it from the changing bounding box.
+		this.model.WorldPivot = CFrame.identity;
 		this.model.Parent = options.parent;
+		this.growthSchedule = createStructuralGrowthSchedule(result.branchGraph, result.organs);
 	}
 
 	public step(maximumInstances: number): number {
@@ -102,19 +115,21 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 					break;
 				}
 				this.configureSegmentPart(part, segment);
-				part.Parent = this.model;
-				this.rendered.push({
+				const entry: RenderedSegmentPart = {
 					kind: "segment",
 					part,
 					segment,
-					baseLength: length3(sub3(segment.end, segment.start)),
-				});
+					localGrowth: 0,
+				};
+				this.updatePresentation(entry);
+				part.Parent = this.model;
+				this.rendered.push(entry);
 				created++;
 				continue;
 			}
 
 			const organ = this.result.organs[this.organCursor++];
-			if (organ === undefined || !this.includesOrgans()) continue;
+			if (organ === undefined || !this.includesOrgan(organ)) continue;
 			const custom = this.options.organFactory?.create(organ);
 			const pooled = custom === undefined;
 			const part = custom ?? this.pool.acquire();
@@ -123,8 +138,17 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 				break;
 			}
 			this.configureOrganPart(part, organ, pooled);
+			const entry: RenderedOrganPart = {
+				kind: "organ",
+				part,
+				organ,
+				baseSize: part.Size,
+				pooled,
+				localGrowth: 0,
+			};
+			this.updatePresentation(entry);
 			part.Parent = this.model;
-			this.rendered.push({ kind: "organ", part, organ, baseSize: part.Size, pooled });
+			this.rendered.push(entry);
 			created++;
 		}
 		return created;
@@ -137,8 +161,10 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 		return true;
 	}
 
-	private includesOrgans(): boolean {
-		return this.lod === "full" || this.lod === "medium";
+	private includesOrgan(organ: GeneratedOrgan): boolean {
+		if (this.lod !== "full" && this.lod !== "medium") return false;
+		const host = this.result.branchGraph.segments[organ.segmentId];
+		return host !== undefined && this.includesSegment(host);
 	}
 
 	private configureSegmentPart(part: Part, segment: BranchSegment): void {
@@ -151,16 +177,16 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 		const up = toRobloxVector(segment.frame.up);
 		part.Shape = Enum.PartType.Cylinder;
 		part.Size = new Vector3(
-			math.max(length * this.growth, 0.001),
-			math.max((segment.radiusStart + segment.radiusEnd) * this.growth, 0.001),
-			math.max((segment.radiusStart + segment.radiusEnd) * this.growth, 0.001),
+			math.max(length, 0.001),
+			math.max(segment.radiusStart + segment.radiusEnd, 0.001),
+			math.max(segment.radiusStart + segment.radiusEnd, 0.001),
 		);
-		part.CFrame = CFrame.fromMatrix(midpoint, unitDirection, up);
+		part.CFrame = this.rootTransform.ToWorldSpace(CFrame.fromMatrix(midpoint, unitDirection, up));
 		part.Anchored = this.options.anchored ?? true;
 		part.CanCollide = this.options.canCollide ?? false;
-		part.Material = this.options.branchMaterial ?? Enum.Material.SmoothPlastic;
+		part.Material = this.options.branchMaterial ?? Enum.Material.Wood;
 		part.Color = this.options.branchColor ?? new Color3(0.25, 0.14, 0.06);
-		part.Transparency = this.growth <= 0 ? 1 : 0;
+		part.Transparency = 1;
 		part.SetAttribute("PlantSegmentId", segment.id);
 		part.SetAttribute("PlantMaterialTag", "branch");
 	}
@@ -172,16 +198,21 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 		if (useDefaults) {
 			const flower = organ.kind === "flower";
 			part.Shape = flower ? Enum.PartType.Ball : Enum.PartType.Block;
-			part.Size = flower ? new Vector3(0.35, 0.35, 0.35) : new Vector3(0.28, 0.06, 0.55);
-			part.Material = this.options.organMaterial ?? Enum.Material.SmoothPlastic;
+			part.Size = flower ? new Vector3(0.35, 0.35, 0.35) : new Vector3(0.3, 0.08, 0.58);
+			if (!flower) {
+				const mesh = new Instance("SpecialMesh");
+				mesh.MeshType = Enum.MeshType.Sphere;
+				mesh.Parent = part;
+			}
+			part.Material = this.options.organMaterial ?? (flower ? Enum.Material.Fabric : Enum.Material.LeafyGrass);
 			part.Color = flower
 				? (this.options.flowerColor ?? new Color3(0.95, 0.55, 0.72))
 				: (this.options.leafColor ?? new Color3(0.2, 0.55, 0.16));
 		}
-		part.CFrame = CFrame.lookAt(position, position.add(heading), up);
+		part.CFrame = this.rootTransform.ToWorldSpace(CFrame.lookAt(position, position.add(heading), up));
 		part.Anchored = this.options.anchored ?? true;
 		part.CanCollide = this.options.canCollide ?? false;
-		part.Transparency = this.growth <= 0 ? 1 : 0;
+		part.Transparency = 1;
 		part.SetAttribute("PlantOrganId", organ.id);
 		part.SetAttribute("PlantOrganKind", organ.kind);
 		part.SetAttribute("PlantMaterialTag", organ.kind);
@@ -197,27 +228,11 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 
 	public setGrowth(growth: number): void {
 		this.growth = math.clamp(growth, 0, 1);
-		for (const entry of this.rendered) {
-			if (entry.kind === "segment") {
-				entry.part.Size = new Vector3(
-					math.max(entry.baseLength * this.growth, 0.001),
-					math.max((entry.segment.radiusStart + entry.segment.radiusEnd) * this.growth, 0.001),
-					math.max((entry.segment.radiusStart + entry.segment.radiusEnd) * this.growth, 0.001),
-				);
-			} else {
-				entry.part.Size = new Vector3(
-					math.max(entry.baseSize.X * this.growth, 0.001),
-					math.max(entry.baseSize.Y * this.growth, 0.001),
-					math.max(entry.baseSize.Z * this.growth, 0.001),
-				);
-			}
-			this.updateVisibility(entry);
-		}
+		for (const entry of this.rendered) this.updatePresentation(entry);
 	}
 
 	public setTime(time: number): void {
-		const duration = math.max(1, this.result.branchGraph.segments.size());
-		this.setGrowth(time / duration);
+		this.setGrowth(time);
 	}
 
 	public setLod(level: LodLevel): void {
@@ -226,14 +241,47 @@ class PartPlantRenderHandle implements StreamingPlantRenderHandle {
 	}
 
 	private updateVisibility(entry: RenderedPart): void {
-		const total = entry.kind === "segment" ? this.result.branchGraph.segments.size() : this.result.organs.size();
-		const id = entry.kind === "segment" ? entry.segment.id : entry.organ.id;
-		const included = entry.kind === "segment" ? this.includesSegment(entry.segment) : this.includesOrgans();
-		entry.part.Transparency = this.growth > 0 && this.growth * math.max(1, total) >= id + 1 && included ? 0 : 1;
+		const included =
+			entry.kind === "segment" ? this.includesSegment(entry.segment) : this.includesOrgan(entry.organ);
+		entry.part.Transparency = entry.localGrowth > 0 && included ? 0 : 1;
+	}
+
+	private updatePresentation(entry: RenderedPart): void {
+		const span =
+			entry.kind === "segment"
+				? this.growthSchedule.segmentSpans[entry.segment.id]
+				: this.growthSchedule.organSpans[entry.organ.id];
+		entry.localGrowth = span === undefined ? this.growth : evaluateStructuralGrowthSpan(span, this.growth);
+		if (entry.kind === "segment") {
+			const geometry = elongateSegment(entry.segment, entry.localGrowth);
+			const start = toRobloxVector(entry.segment.start);
+			const finish = toRobloxVector(entry.segment.end);
+			const direction = finish.sub(start);
+			const unitDirection =
+				direction.Magnitude > 1e-6 ? direction.Unit : toRobloxVector(entry.segment.frame.heading);
+			const up = toRobloxVector(entry.segment.frame.up);
+			const diameter = (entry.segment.radiusStart + entry.segment.radiusEnd) * entry.localGrowth;
+			entry.part.Size = new Vector3(
+				math.max(geometry.length, 0.001),
+				math.max(diameter, 0.001),
+				math.max(diameter, 0.001),
+			);
+			entry.part.CFrame = this.rootTransform.ToWorldSpace(
+				CFrame.fromMatrix(toRobloxVector(geometry.center), unitDirection, up),
+			);
+		} else {
+			entry.part.Size = new Vector3(
+				math.max(entry.baseSize.X * entry.localGrowth, 0.001),
+				math.max(entry.baseSize.Y * entry.localGrowth, 0.001),
+				math.max(entry.baseSize.Z * entry.localGrowth, 0.001),
+			);
+		}
+		this.updateVisibility(entry);
 	}
 
 	public updateTransform(transform: CFrame): void {
 		this.model.PivotTo(transform);
+		this.rootTransform = transform;
 	}
 
 	public updateMaterialTag(tag: string, material: Enum.Material, color?: Color3): void {

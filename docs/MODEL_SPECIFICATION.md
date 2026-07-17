@@ -20,3 +20,10 @@ const spec: ModelSpecification = {
 Use `extendModelSpecification` for immutable group-level deep overrides and
 `migrateModelSpecification` for schema 0 inputs. Never execute registry IDs from
 untrusted data without an allow-list.
+
+`hashModelSpecification` covers every declarative generation group, including
+turtle, geometry, organ, animation, LOD, version, and extension data. Inline
+callback bodies cannot be portably hashed across JavaScript and Luau, so compiled
+callback-backed models receive a process-local cache identity that prevents
+unsafe shared-cache aliasing. For network-reconstructible models, prefer static
+successors or versioned `operationId`/`predicateId` registry entries.

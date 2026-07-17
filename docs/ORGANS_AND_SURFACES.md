@@ -11,3 +11,10 @@ changes topology.
 
 Compound leaves place blade meshes along a rachis. Leaf veins can be represented
 as paths/topology without requiring photorealistic meshes.
+
+At the high-level generator boundary, conventional `L` and `K` modules become
+renderer-neutral leaf and flower attachments when the model configures
+`terminalLeafKind` or `terminalFlowerKind`. Their transforms preserve the exact
+turtle node and frame. Terminal branches without an explicit socket still
+receive the configured fallback organ, while an explicit socket at a terminal
+tip takes precedence there. Explicit and fallback organs share `maxOrgans`.

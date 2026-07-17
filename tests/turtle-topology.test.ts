@@ -79,6 +79,34 @@ describe("turtle interpretation", () => {
 		expect(result.polygons).toHaveLength(1);
 		expect(result.diagnostics[0]?.code).toBe("UNBALANCED_BRANCH");
 	});
+
+	it("emits botanical attachment sockets at the active turtle frame", () => {
+		const emittedKinds = new Array<string>();
+		const result = interpret3D(
+			[
+				symbol("F"),
+				symbol("["),
+				symbol("+", Math.PI / 2),
+				symbol("F"),
+				symbol("L"),
+				symbol("]"),
+				symbol("F"),
+				symbol("K"),
+			],
+			{
+				attachmentMappings: [
+					{ symbol: "L", kind: "leaf" },
+					{ symbol: "K", kind: "flower" },
+				],
+				sink: { onAttachment: (attachment) => emittedKinds.push(attachment.kind) },
+			},
+		);
+		expect(result.branchGraph.attachments.map((attachment) => attachment.kind)).toEqual(["leaf", "flower"]);
+		expect(emittedKinds).toEqual(["leaf", "flower"]);
+		expect(result.branchGraph.attachments[0]?.segmentId).toBe(1);
+		expect(result.branchGraph.attachments[1]?.segmentId).toBe(2);
+		expect(result.branchGraph.attachments[1]?.transform.position).toEqual(result.branchGraph.segments[2]?.end);
+	});
 });
 
 describe("branch topology", () => {

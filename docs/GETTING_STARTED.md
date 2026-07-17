@@ -1,12 +1,12 @@
 # Getting started
 
-Install with `npm install @rbxts/plant-generator`, compile a preset once, and
+Install with `npm install @rbxts/a-plant-generator`, compile a preset once, and
 generate many deterministic plants from it. `PlantCompiler.compile` is the
 strict convenience boundary; tooling that must retain diagnostics can use
 `compileWithDiagnostics`.
 
 ```ts
-import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/plant-generator";
+import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/a-plant-generator";
 
 const model = PlantCompiler.compile(PLANT_PRESETS.conifer!);
 const result = PlantGenerator.generate(model, {

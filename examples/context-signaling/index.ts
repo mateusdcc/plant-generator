@@ -1,4 +1,4 @@
-import { compileGrammar, derive, symbol } from "@rbxts/plant-generator";
+import { compileGrammar, derive, symbol } from "@rbxts/a-plant-generator";
 
 const compiled = compileGrammar({
 	alphabet: ["signal", "bud", "active"].map((id) => ({ id })),

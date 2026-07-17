@@ -5,7 +5,7 @@ import {
 	transformMesh,
 	IDENTITY_FRAME,
 	vec3,
-} from "@rbxts/plant-generator";
+} from "@rbxts/a-plant-generator";
 
 const arch = PlantGenerator.generate(PlantCompiler.compile(PLANT_PRESETS["botanical-arch"]!), {
 	seed: 5,

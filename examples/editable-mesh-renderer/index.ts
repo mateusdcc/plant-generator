@@ -4,7 +4,7 @@ import {
 	PlantCompiler,
 	PlantGenerator,
 	type EditableMeshCapability,
-} from "@rbxts/plant-generator";
+} from "@rbxts/a-plant-generator";
 
 export function renderMesh(parent: Instance, capability: EditableMeshCapability) {
 	const result = PlantGenerator.generate(PlantCompiler.compile(PLANT_PRESETS.vine!), { seed: 7, iterations: 3 });

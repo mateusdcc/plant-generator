@@ -1,7 +1,7 @@
-# @rbxts/plant-generator
+# @rbxts/a-plant-generator
 
 [![CI](https://github.com/mateusdcc/plant-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/mateusdcc/plant-generator/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@rbxts/plant-generator)](https://www.npmjs.com/package/@rbxts/plant-generator)
+[![npm](https://img.shields.io/npm/v/@rbxts/a-plant-generator)](https://www.npmjs.com/package/@rbxts/a-plant-generator)
 [![docs](https://img.shields.io/badge/docs-GitHub%20Pages-2ea44f)](https://mateusdcc.github.io/plant-generator/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -10,19 +10,25 @@ bounded L-system derivation, stable 2D/3D turtles, plant topology, mesh builders
 phyllotaxis, developmental animation, cellular map systems, IFS utilities, and
 optional Roblox renderers without depending on a game framework.
 
-Status: **0.1.0**. Core APIs are usable; cellular maps and EditableMesh adapters
+Status: **0.1.2**. Core APIs are usable; cellular maps and EditableMesh adapters
 are explicitly experimental while their mechanisms are functional and tested.
+
+| Preset architectures                                                                        | Golden-angle phyllotaxis                                                                     |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ![Six deterministic plant preset architectures](docs/assets/examples/preset-gallery.jpg)    | ![Planar and cylindrical phyllotaxis forms](docs/assets/examples/phyllotaxis-forms.jpg)      |
+| Growth progression                                                                          | Inflorescence architectures                                                                  |
+| ![Five deterministic stages of one generated plant](docs/assets/examples/growth-stages.jpg) | ![Six generated inflorescence architectures](docs/assets/examples/inflorescence-gallery.jpg) |
 
 ## Install
 
 ```sh
-npm install @rbxts/plant-generator
+npm install @rbxts/a-plant-generator
 ```
 
 ## 30-second quick start
 
 ```ts
-import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/plant-generator";
+import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/a-plant-generator";
 
 const model = PlantCompiler.compile(PLANT_PRESETS["broad-canopy-tree"]!);
 const plant = PlantGenerator.generate(model, {
@@ -40,7 +46,7 @@ compact descriptor. Derivation never creates Instances.
 ## Growth and rendering
 
 ```ts
-import { PartPlantRenderer, PlantCompiler, PlantGenerator, PLANT_PRESETS } from "@rbxts/plant-generator";
+import { PartPlantRenderer, PlantCompiler, PlantGenerator, PLANT_PRESETS } from "@rbxts/a-plant-generator";
 
 const model = PlantCompiler.compile(PLANT_PRESETS["timed-tree"]!);
 const result = PlantGenerator.generate(model, { seed: 9, iterations: 4 });
@@ -110,7 +116,8 @@ models. Prefer incremental sessions and distance LOD for interactive worlds.
 
 ## Guides
 
-[Getting started](docs/GETTING_STARTED.md) · [L-systems](docs/L_SYSTEMS.md) ·
+[Getting started](docs/GETTING_STARTED.md) · [Examples](docs/EXAMPLES.md) ·
+[L-systems](docs/L_SYSTEMS.md) ·
 [Turtles](docs/TURTLE_INTERPRETATION.md) · [Tree modeling](docs/TREE_MODELING.md) ·
 [Phyllotaxis](docs/PHYLLOTAXIS.md) · [Animation](docs/ANIMATION.md) ·
 [Networking](docs/NETWORKING_RECIPE.md) · [Extending](docs/EXTENDING.md) ·

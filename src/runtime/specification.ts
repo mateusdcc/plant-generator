@@ -1,6 +1,6 @@
 import { Diagnostics, type Diagnostic } from "../core/diagnostics";
 import { compileGrammar, type CompiledGrammar, type GrammarSpec, type ProductionSpec } from "../core/grammar";
-import type { StructuredParameter, SymbolParameter } from "../core/symbols";
+import type { ModuleSymbol, StructuredParameter, SymbolId, SymbolParameter } from "../core/symbols";
 import type { JunctionMode } from "../geometry/tubes";
 import type { TurtleCommandMapping } from "../turtle/interpreter";
 import type { BehaviorRegistries } from "./registry";
@@ -81,6 +81,8 @@ export interface CompiledPlantModel {
 	readonly specification: ModelSpecification;
 	readonly grammar: CompiledGrammar;
 	readonly hash: string;
+	/** Process-local salt that prevents callback-backed models from sharing unsafe cache entries. @internal */
+	readonly runtimeCacheIdentity?: number;
 	readonly registries?: BehaviorRegistries;
 }
 
@@ -88,6 +90,20 @@ export interface CompiledPlantModel {
 export interface PlantCompileResult {
 	readonly model?: CompiledPlantModel;
 	readonly diagnostics: readonly Diagnostic[];
+}
+
+let nextRuntimeCacheIdentity = 1;
+
+function usesRuntimeBehavior(
+	specification: ModelSpecification,
+	grammar: GrammarSpec,
+	registries: BehaviorRegistries | undefined,
+): boolean {
+	for (const production of grammar.productions) {
+		if (typeIs(production.successor, "function") || production.condition !== undefined) return true;
+	}
+	const geometryFactoryId = specification.geometry?.factoryId;
+	return geometryFactoryId !== undefined && registries?.geometryFactories.resolve(geometryFactoryId) !== undefined;
 }
 
 function resolveProductions(
@@ -144,11 +160,13 @@ export function compileModelSpecification(
 	for (const diagnostic of grammarResult.diagnostics) diagnostics.add(diagnostic);
 	if (diagnostics.hasErrors() || grammarResult.grammar === undefined) return { diagnostics: diagnostics.all() };
 	const resolvedSpecification: ModelSpecification = { ...specification, grammar: resolvedGrammar };
+	const runtimeBehavior = usesRuntimeBehavior(resolvedSpecification, resolvedGrammar, registries);
 	return {
 		model: {
 			specification: resolvedSpecification,
 			grammar: grammarResult.grammar,
 			hash: hashModelSpecification(specification),
+			...(runtimeBehavior ? { runtimeCacheIdentity: nextRuntimeCacheIdentity++ } : {}),
 			...(registries === undefined ? {} : { registries }),
 		},
 		diagnostics: diagnostics.all(),
@@ -157,7 +175,7 @@ export function compileModelSpecification(
 
 /** Stable hash for generation parameter overrides and mutation data. @public */
 export function hashSymbolParameters(parameters: Readonly<Record<string, SymbolParameter>>): string {
-	let hash = 2166136261;
+	let hash = hashText(2166136261, "symbol-parameters-v2;");
 	const keys = new Array<string>();
 	for (const [key] of pairs(parameters)) keys.push(key);
 	for (let index = 1; index < keys.size(); index++) {
@@ -170,8 +188,9 @@ export function hashSymbolParameters(parameters: Readonly<Record<string, SymbolP
 		}
 		keys[cursor + 1] = value;
 	}
+	hash = mix(hash, keys.size());
 	for (const key of keys) {
-		hash = hashText(hash, key);
+		hash = hashScalar(hash, key);
 		const value = parameters[key];
 		if (value !== undefined) hash = hashParameter(hash, value);
 	}
@@ -190,40 +209,179 @@ function hashText(hash: number, value: string): number {
 	return result;
 }
 
+function hashScalar(hash: number, value: string | number | boolean | undefined): number {
+	if (value === undefined) return hashText(hash, "undefined;");
+	let result = hashText(hash, `${typeOf(value)};`);
+	const text = `${value}`;
+	result = mix(result, text.size());
+	return hashText(result, text);
+}
+
+interface ParameterEntry {
+	readonly key: string;
+	readonly value: SymbolParameter;
+}
+
+function sortParameterEntries(values: ParameterEntry[]): void {
+	for (let index = 1; index < values.size(); index++) {
+		const value = values[index];
+		if (value === undefined) continue;
+		let cursor = index - 1;
+		while (cursor >= 0 && (values[cursor]?.key ?? "") > value.key) {
+			values[cursor + 1] = values[cursor] as ParameterEntry;
+			cursor--;
+		}
+		values[cursor + 1] = value;
+	}
+}
+
 function hashParameter(hash: number, value: SymbolParameter): number {
 	const kind = typeOf(value);
-	let result = hashText(hash, kind);
-	if (kind === "number") return mix(result, math.floor((value as number) * 1_000_000));
-	if (kind === "string") return hashText(result, value as string);
-	if (kind === "boolean") return mix(result, value === true ? 1 : 0);
-	for (const [key, child] of pairs(value as Readonly<Record<string | number, SymbolParameter>>)) {
-		result = hashText(result, `${key}`);
-		result = hashParameter(result, child);
+	if (kind === "number" || kind === "string" || kind === "boolean") {
+		return hashScalar(hash, value as number | string | boolean);
+	}
+	let result = hashText(hash, "table;");
+	const entries = new Array<ParameterEntry>();
+	for (const [key, child] of pairs(value as Readonly<Record<string | number, SymbolParameter>>))
+		entries.push({ key: `${key}`, value: child });
+	sortParameterEntries(entries);
+	result = mix(result, entries.size());
+	for (const entry of entries) {
+		result = hashScalar(result, entry.key);
+		result = hashParameter(result, entry.value);
 	}
 	return result;
 }
 
-/** Stable deterministic hash of a model's generation-relevant data. @public */
-export function hashModelSpecification(specification: ModelSpecification): string {
-	let hash = hashText(2166136261, specification.id);
-	hash = mix(hash, specification.schemaVersion);
-	for (const value of specification.grammar.axiom) {
-		hash = hashText(hash, `${value.id}`);
-		for (const parameter of value.parameters) hash = hashParameter(hash, parameter);
+function hashModule(hash: number, value: ModuleSymbol): number {
+	let result = hashScalar(hash, value.id);
+	result = mix(result, value.parameters.size());
+	for (const parameter of value.parameters) result = hashParameter(result, parameter);
+	result = hashScalar(result, value.birthTime);
+	result = hashScalar(result, value.trace === undefined ? undefined : "trace");
+	if (value.trace !== undefined) {
+		result = hashScalar(result, value.trace.generation);
+		result = hashScalar(result, value.trace.sourceIndex);
+		result = hashScalar(result, value.trace.productionId);
 	}
-	for (const production of specification.grammar.productions) {
-		hash = hashText(hash, production.id);
-		hash = hashText(hash, `${production.predecessor}`);
-		hash = mix(hash, math.floor((production.weight ?? 1) * 1_000_000));
-		hash = hashText(hash, production.operationId ?? "");
-		hash = hashText(hash, production.predicateId ?? "");
-		if (!typeIs(production.successor, "function")) {
-			for (const value of production.successor) {
-				hash = hashText(hash, `${value.id}`);
-				for (const parameter of value.parameters) hash = hashParameter(hash, parameter);
+	return result;
+}
+
+function hashModules(hash: number, values: readonly ModuleSymbol[]): number {
+	let result = mix(hash, values.size());
+	for (const value of values) result = hashModule(result, value);
+	return result;
+}
+
+function hashSymbolIds(hash: number, values: readonly SymbolId[] | undefined): number {
+	let result = hashScalar(hash, values?.size());
+	if (values !== undefined) for (const value of values) result = hashScalar(result, value);
+	return result;
+}
+
+/**
+ * Stable deterministic hash of a model's declarative generation-relevant data.
+ *
+ * @remarks Callback implementations cannot be represented portably across JS
+ * and Luau. Their declared IDs and model version participate in this public
+ * hash, while compiled models receive a process-local cache salt so distinct
+ * inline callbacks cannot alias one another in a shared generation cache.
+ * @public
+ */
+export function hashModelSpecification(specification: ModelSpecification): string {
+	let hash = hashText(2166136261, "model-specification-v2;");
+	hash = hashScalar(hash, specification.schemaVersion);
+	hash = hashScalar(hash, specification.id);
+	hash = hashScalar(hash, specification.version);
+
+	const grammar = specification.grammar;
+	hash = mix(hash, grammar.alphabet.size());
+	for (const entry of grammar.alphabet) {
+		hash = hashScalar(hash, entry.id);
+		hash = hashScalar(hash, entry.parameterTypes?.size());
+		if (entry.parameterTypes !== undefined)
+			for (const parameterType of entry.parameterTypes) hash = hashScalar(hash, parameterType);
+	}
+	hash = hashModules(hash, grammar.axiom);
+	hash = mix(hash, grammar.productions.size());
+	for (const production of grammar.productions) {
+		hash = hashScalar(hash, production.id);
+		hash = hashScalar(hash, production.predecessor);
+		hash = hashSymbolIds(hash, production.leftContext);
+		hash = hashSymbolIds(hash, production.rightContext);
+		hash = hashSymbolIds(hash, production.ignoreSymbols);
+		hash = hashScalar(hash, production.weight);
+		hash = hashScalar(hash, production.priority);
+		hash = hashScalar(hash, production.contextMode);
+		hash = hashScalar(hash, production.predicateId);
+		hash = hashScalar(hash, production.operationId);
+		hash = hashScalar(hash, production.condition === undefined ? undefined : "runtime-condition");
+		if (typeIs(production.successor, "function")) hash = hashScalar(hash, "runtime-successor");
+		else hash = hashModules(hash, production.successor);
+	}
+	hash = hashScalar(hash, grammar.branchOpenSymbol);
+	hash = hashScalar(hash, grammar.branchCloseSymbol);
+
+	const turtle = specification.turtle;
+	hash = hashScalar(hash, turtle === undefined ? undefined : "turtle");
+	if (turtle !== undefined) {
+		hash = hashScalar(hash, turtle.stepSize);
+		hash = hashScalar(hash, turtle.angleRadians);
+		hash = hashScalar(hash, turtle.initialWidth);
+		hash = hashScalar(hash, turtle.widthDecay);
+		hash = hashScalar(hash, turtle.unknownSymbolPolicy);
+		hash = hashScalar(hash, turtle.mappings?.size());
+		if (turtle.mappings !== undefined) {
+			for (const mapping of turtle.mappings) {
+				hash = hashScalar(hash, mapping.symbol);
+				hash = hashScalar(hash, mapping.action);
 			}
 		}
 	}
+
+	const geometry = specification.geometry;
+	hash = hashScalar(hash, geometry === undefined ? undefined : "geometry");
+	if (geometry !== undefined) {
+		hash = hashScalar(hash, geometry.enabled);
+		hash = hashScalar(hash, geometry.radialResolution);
+		hash = hashScalar(hash, geometry.junctionMode);
+		hash = hashScalar(hash, geometry.capBranches);
+		hash = hashScalar(hash, geometry.factoryId);
+	}
+
+	const organs = specification.organs;
+	hash = hashScalar(hash, organs === undefined ? undefined : "organs");
+	if (organs !== undefined) {
+		hash = hashScalar(hash, organs.terminalLeafKind);
+		hash = hashScalar(hash, organs.terminalFlowerKind);
+		hash = hashScalar(hash, organs.leafDensity);
+		hash = hashScalar(hash, organs.flowerDensity);
+		hash = hashScalar(hash, organs.factoryId);
+	}
+
+	const animation = specification.animation;
+	hash = hashScalar(hash, animation === undefined ? undefined : "animation");
+	if (animation !== undefined) {
+		hash = hashScalar(hash, animation.duration);
+		hash = hashScalar(hash, animation.growthFunctionId);
+		hash = hashScalar(hash, animation.birthInterval);
+	}
+
+	const lod = specification.lod;
+	hash = hashScalar(hash, lod === undefined ? undefined : "lod");
+	if (lod !== undefined) {
+		hash = hashScalar(hash, lod.fullDistance);
+		hash = hashScalar(hash, lod.mediumDistance);
+		hash = hashScalar(hash, lod.lowDistance);
+		hash = hashScalar(hash, lod.mediumRadialResolution);
+		hash = hashScalar(hash, lod.lowRadialResolution);
+		hash = hashScalar(hash, lod.maxBranchDepthByLevel === undefined ? undefined : "depths");
+		if (lod.maxBranchDepthByLevel !== undefined)
+			hash = hashParameter(hash, lod.maxBranchDepthByLevel as StructuredParameter);
+	}
+
+	hash = hashScalar(hash, specification.extensions === undefined ? undefined : "extensions");
+	if (specification.extensions !== undefined) hash = hashParameter(hash, specification.extensions);
 	return `${hash}`;
 }
 

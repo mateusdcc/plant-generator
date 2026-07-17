@@ -18,7 +18,7 @@ try {
 				name: "plant-generator-consumer-fixture",
 				private: true,
 				scripts: { build: "rbxtsc" },
-				dependencies: { "@rbxts/plant-generator": `file:${tarball}` },
+				dependencies: { "@rbxts/a-plant-generator": `file:${tarball}` },
 				devDependencies: {
 					"@rbxts/compiler-types": "3.0.0-types.0",
 					"@rbxts/types": "1.0.938",
@@ -56,7 +56,7 @@ try {
 	);
 	writeFileSync(
 		resolve(fixture, "src/index.ts"),
-		`import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/plant-generator";\nconst model = PlantCompiler.compile(PLANT_PRESETS.conifer!);\nexport const result = PlantGenerator.generate(model, { seed: 1, iterations: 2 });\n`,
+		`import { PLANT_PRESETS, PlantCompiler, PlantGenerator } from "@rbxts/a-plant-generator";\nconst model = PlantCompiler.compile(PLANT_PRESETS.conifer!);\nexport const result = PlantGenerator.generate(model, { seed: 1, iterations: 2 });\n`,
 	);
 	writeFileSync(
 		resolve(fixture, "default.project.json"),

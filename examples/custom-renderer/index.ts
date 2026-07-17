@@ -1,4 +1,4 @@
-import type { LodLevel, PlantGenerationResult, PlantRenderHandle, PlantRenderer } from "@rbxts/plant-generator";
+import type { LodLevel, PlantGenerationResult, PlantRenderHandle, PlantRenderer } from "@rbxts/a-plant-generator";
 
 class DataHandle implements PlantRenderHandle {
 	public constructor(private readonly result: PlantGenerationResult) {}

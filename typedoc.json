@@ -2,13 +2,13 @@
 	"$schema": "https://typedoc.org/schema.json",
 	"entryPoints": ["src/index.ts"],
 	"out": "docs-site",
-	"name": "@rbxts/plant-generator",
+	"name": "@rbxts/a-plant-generator",
 	"includeVersion": true,
 	"readme": "README.md",
 	"projectDocuments": ["docs/*.md"],
 	"navigationLinks": {
 		"GitHub": "https://github.com/mateusdcc/plant-generator",
-		"npm": "https://www.npmjs.com/package/@rbxts/plant-generator"
+		"npm": "https://www.npmjs.com/package/@rbxts/a-plant-generator"
 	},
 	"categorizeByGroup": true,
 	"searchInDocuments": true,

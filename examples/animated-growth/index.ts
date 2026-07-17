@@ -1,4 +1,4 @@
-import { GrowthHandle, PlantTimeline, createGrowthFunction, symbol } from "@rbxts/plant-generator";
+import { GrowthHandle, PlantTimeline, createGrowthFunction, symbol } from "@rbxts/a-plant-generator";
 
 export const timeline = new PlantTimeline([
 	{ symbol: symbol("stem"), birthTime: 0, lifespan: 10 },

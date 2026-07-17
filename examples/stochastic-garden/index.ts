@@ -1,4 +1,4 @@
-import { PlantCompiler, PlantGenerator, symbol, type ModelSpecification } from "@rbxts/plant-generator";
+import { PlantCompiler, PlantGenerator, symbol, type ModelSpecification } from "@rbxts/a-plant-generator";
 
 const model: ModelSpecification = {
 	schemaVersion: 1,

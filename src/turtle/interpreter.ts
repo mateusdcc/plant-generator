@@ -21,6 +21,7 @@ import {
 	type BranchGraph,
 	type BranchNode,
 	type BranchSegment,
+	type OrganAttachment,
 	type PlantAxis,
 } from "../topology/branch-graph";
 
@@ -48,6 +49,12 @@ export type TurtleAction =
 export interface TurtleCommandMapping {
 	readonly symbol: SymbolId;
 	readonly action: TurtleAction;
+}
+
+/** Maps a non-drawing module to a botanical attachment socket. @public */
+export interface TurtleAttachmentMapping {
+	readonly symbol: SymbolId;
+	readonly kind: string;
 }
 
 /** Direction field used for tropism, wind, gravity, or light. @public */
@@ -91,6 +98,8 @@ export interface TurtleCommand {
 export interface GeometrySink {
 	/** Receives each completed branch segment. */
 	onSegment?(segment: BranchSegment): void;
+	/** Receives each leaf, flower, fruit, or custom organ socket. */
+	onAttachment?(attachment: OrganAttachment): void;
 	/** Receives each completed polygon contour. */
 	onPolygon?(polygon: readonly Vec3[]): void;
 }
@@ -104,6 +113,7 @@ export interface Turtle3DOptions {
 	readonly initialPosition?: Vec3;
 	readonly initialFrame?: Frame3;
 	readonly mappings?: readonly TurtleCommandMapping[];
+	readonly attachmentMappings?: readonly TurtleAttachmentMapping[];
 	readonly customCommands?: readonly TurtleCommand[];
 	readonly unknownSymbolPolicy?: "ignore" | "warn" | "error";
 	readonly tropism?: TropismSpec;
@@ -209,6 +219,11 @@ function findAction(mappings: readonly TurtleCommandMapping[], id: SymbolId): Tu
 	return undefined;
 }
 
+function findAttachmentKind(mappings: readonly TurtleAttachmentMapping[], id: SymbolId): string | undefined {
+	for (const mapping of mappings) if (sameId(mapping.symbol, id)) return mapping.kind;
+	return undefined;
+}
+
 function numericParameter(value: ModuleSymbol, index: number, fallback: number): number {
 	const parameter = value.parameters[index];
 	return typeIs(parameter, "number") ? parameter : fallback;
@@ -258,6 +273,7 @@ export function interpret3D(word: readonly ModuleSymbol[], options: Turtle3DOpti
 	const diagnostics = new Diagnostics();
 	const limits = mergedLimits(options.limits);
 	const mappings = options.mappings ?? CANONICAL_TURTLE_COMMANDS;
+	const attachmentMappings = options.attachmentMappings ?? [];
 	const customCommands = options.customCommands ?? [];
 	const stepSize = options.stepSize ?? 1;
 	const angle = options.angleRadians ?? math.pi / 6;
@@ -266,6 +282,7 @@ export function interpret3D(word: readonly ModuleSymbol[], options: Turtle3DOpti
 	const segments = new Array<BranchSegment>();
 	const axes = new Array<PlantAxis>();
 	const axisSegments = new Array<number[]>();
+	const attachments = new Array<OrganAttachment>();
 	const polygons = new Array<readonly Vec3[]>();
 	let activePolygon: Vec3[] | undefined;
 	const startPosition = options.initialPosition ?? vec3(0, 0, 0);
@@ -285,6 +302,7 @@ export function interpret3D(word: readonly ModuleSymbol[], options: Turtle3DOpti
 	const stack = new Array<MutableTurtleState>();
 	let maxStackDepth = 0;
 	let processed = 0;
+	let attachmentLimitReported = false;
 	for (let index = 0; index < word.size(); index++) {
 		const symbolValue = word[index];
 		if (symbolValue === undefined) continue;
@@ -299,6 +317,30 @@ export function interpret3D(word: readonly ModuleSymbol[], options: Turtle3DOpti
 			continue;
 		}
 		if (action === undefined) {
+			const attachmentKind = findAttachmentKind(attachmentMappings, symbolValue.id);
+			if (attachmentKind !== undefined) {
+				if (attachments.size() >= limits.maxOrgans) {
+					if (!attachmentLimitReported) {
+						diagnostics.warn("LIMIT_ORGANS", "Turtle reached its attachment limit.", {
+							symbolIndex: index,
+						});
+						attachmentLimitReported = true;
+					}
+					continue;
+				}
+				const attachment: OrganAttachment = {
+					id: attachments.size(),
+					nodeId: state.currentNodeId,
+					...(state.parentSegmentId === undefined ? {} : { segmentId: state.parentSegmentId }),
+					kind: attachmentKind,
+					transform: { position: state.position, frame: state.frame, scale: vec3(1, 1, 1) },
+					birthTime: symbolValue.birthTime ?? nodes[state.currentNodeId]?.birthTime ?? 0,
+					metadata: { sourceSymbol: `${symbolValue.id}` },
+				};
+				attachments.push(attachment);
+				options.sink?.onAttachment?.(attachment);
+				continue;
+			}
 			if (options.unknownSymbolPolicy === "warn")
 				diagnostics.warn("UNKNOWN_SYMBOL", `No turtle command for ${symbolValue.id}.`, { symbolIndex: index });
 			if (options.unknownSymbolPolicy === "error")
@@ -462,8 +504,8 @@ export function interpret3D(word: readonly ModuleSymbol[], options: Turtle3DOpti
 		segments,
 		axes,
 		buds: [],
-		attachments: [],
-		bounds: computeGraphBounds(segments),
+		attachments,
+		bounds: computeGraphBounds(segments, attachments),
 	};
 	return { branchGraph: graph, polygons, diagnostics: diagnostics.all(), processedSymbols: processed, maxStackDepth };
 }
