@@ -3,6 +3,14 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 Semantic Versioning.
 
+## [0.2.1](https://github.com/mateusdcc/plant-generator/compare/a-plant-generator-v0.2.0...a-plant-generator-v0.2.1) (2026-07-24)
+
+
+### Build system
+
+* **deps-dev:** bump @rbxts/types from 1.0.938 to 1.0.939 ([#19](https://github.com/mateusdcc/plant-generator/issues/19)) ([93380e2](https://github.com/mateusdcc/plant-generator/commit/93380e23556e8bfb67099ba67142b147be5b3dd5))
+* **deps-dev:** bump the development-tooling group across 1 directory with 4 updates ([#21](https://github.com/mateusdcc/plant-generator/issues/21)) ([1d34186](https://github.com/mateusdcc/plant-generator/commit/1d34186c2d22ac2f0c3af657323d1b352e54aa24))
+
 ## [0.2.0](https://github.com/mateusdcc/plant-generator/compare/a-plant-generator-v0.1.2...a-plant-generator-v0.2.0) (2026-07-17)
 
 

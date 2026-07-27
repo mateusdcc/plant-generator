@@ -1,6 +1,6 @@
 {
 	"name": "@rbxts/a-plant-generator",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Deterministic, renderer-independent procedural botany for roblox-ts.",
 	"main": "out/init.luau",
 	"types": "out/index.d.ts",
