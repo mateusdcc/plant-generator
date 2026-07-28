@@ -61,7 +61,7 @@
 		"@rbxts/types": "1.0.939",
 		"@typescript-eslint/eslint-plugin": "8.65.0",
 		"@typescript-eslint/parser": "8.65.0",
-		"eslint": "10.7.0",
+		"eslint": "10.8.0",
 		"eslint-config-prettier": "10.1.8",
 		"eslint-plugin-roblox-ts": "1.4.1",
 		"prettier": "3.9.6",
